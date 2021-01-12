@@ -45,7 +45,11 @@ function displayNSLogs(logs){
   })
   logEl.appendChild(line)
 
-  logs.map(log => {
+  logs
+  .sort((a, b)=>{
+    return a.type > b.type ? 1 : -1
+  })
+  .map(log => {
     line = document.createElement('tr')
     attributes.map(attr => {
       let td = document.createElement('td')
@@ -64,7 +68,7 @@ function displayCert(cert){
       return certEl;
   }
 
-  let attributes = 'from,to,issuer,names'.split(',')
+  let attributes = 'from,to,verified,issuer,names'.split(',')
   let line = document.createElement('tr')
   let contentLine = document.createElement('tr')
   certEl.appendChild(line)

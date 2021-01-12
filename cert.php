@@ -1,5 +1,7 @@
 <?php
 
+require './vendor/autoload.php';
+
 $data = (object) array_merge($_GET, $_POST);
 
 $hostname = $data->query;
@@ -27,24 +29,31 @@ if(!$cont) {
 $x509 = $cont["options"]["ssl"]["peer_certificate"];
 $certparsed = @openssl_x509_parse($x509);
 
-
-
+$res = [];
 foreach($cont["options"]["ssl"]["peer_certificate_chain"] as $chaincert)
 {
     $chainparsed = openssl_x509_parse($chaincert);
     $chain_public_key = openssl_get_publickey($chaincert);
     $r = openssl_x509_verify($x509, $chain_public_key);
-    if ($r==1)
-    {
-        echo json_encode([
-          'issuer' => $certparsed['issuer']['O'] . ' - ' . $certparsed['issuer']['CN'],
-          'names' => explode(', ', preg_replace("/DNS\:/s", '', $certparsed['extensions']['subjectAltName'])),
-          'from' => parse_date($certparsed['validFrom']),
-          'to' => parse_date($certparsed['validTo']),
-        ]);
+    if($r == 1) {
+      echo json_encode([
+       'issuer' => $certparsed['issuer']['O'] . ' - ' . $certparsed['issuer']['CN'],
+       'names' => explode(', ', preg_replace("/DNS\:/s", '', $certparsed['extensions']['subjectAltName'])),
+       'from' => parse_date($certparsed['validFrom']),
+       'to' => parse_date($certparsed['validTo']),
+       'verified' => true
+     ]);
+     exit;
     }
-
 }
+
+echo json_encode([
+  'issuer' => $certparsed['issuer']['O'] . ' - ' . $certparsed['issuer']['CN'],
+  'names' => explode(', ', preg_replace("/DNS\:/s", '', $certparsed['extensions']['subjectAltName'])),
+  'from' => parse_date($certparsed['validFrom']),
+  'to' => parse_date($certparsed['validTo']),
+  'verified' => false
+]);
 
 function parse_date($zuluDate){
   $year = $zuluDate[0] . $zuluDate[1];
