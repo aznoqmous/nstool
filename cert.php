@@ -1,7 +1,5 @@
 <?php
 
-require './vendor/autoload.php';
-
 $data = (object) array_merge($_GET, $_POST);
 
 $hostname = $data->query;
