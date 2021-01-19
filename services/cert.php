@@ -2,7 +2,7 @@
 
 $data = (object) array_merge($_GET, $_POST);
 
-$hostname = $data->query;
+$hostname = json_decode($data->query);
 
 $ssloptions = array(
     "capture_peer_cert" => true,

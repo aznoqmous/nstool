@@ -1,29 +1,24 @@
 import Notifier from "./notifier";
+import Rigged from "rigged";
 
-export default class Nstool {
+export default class Nstool extends Rigged {
     constructor(container=null) {
-        this.container = container || document.body
+        super({ container, template: `
+        div .nstool
+            input #search [autofocus="true"] [placeholder="www.yoursite.com"]
+            input #mail [type="mail"] [placeholder="mail"]
+            div #dnsResults
+            div #certResults
+        ` })
 
         this.watchTimeout = 5000
 
-        this.build()
         this.bind()
-    }
-
-    build(){
-        this.search = document.createElement('input')
-        this.search.autofocus = true
-
-        this.result = document.createElement('div')
-
-        this.container.appendChild(this.search)
-        this.container.appendChild(this.result)
     }
 
     bind(){
         this.search.addEventListener('keyup', (e)=>{
             if(e.key !== 'Enter') return;
-            this.result.innerHTML = ''
 
             this.search.value = this.search.value
                 .replace('https://', '')
@@ -31,34 +26,45 @@ export default class Nstool {
 
             this.nslookup(this.search.value)
                 .then(res => {
-                    this.result.appendChild(this.displayNSLogs(res))
+                    this.dnsResults.innerHTML = ''
+                    this.dnsResults.appendChild(this.displayNSLogs(res))
                 })
 
             this.certlookup(this.search.value)
                 .then(res => {
-                    this.result.appendChild(this.displayCert(res))
+                    this.certResults.innerHTML = ''
+                    this.certResults.appendChild(this.displayCert(res))
                 })
         })
     }
 
     nslookup(value){
         this.lastSearch = value
-        return this.post('/ns-lookup.php', value)
+        return this.post('ns-lookup.php', value)
     }
+
     certlookup(value){
         this.lastSearch = value
-        return this.post('/cert.php', value)
+        return this.post('cert.php', value)
+    }
+
+    sendmail(destination, content){
+        return this.post('mail.php', {
+            destination, content
+        })
     }
 
     post(url, query){
         let data = new FormData()
-        data.append('query', query)
-        return fetch(url, {
+        data.append('query', JSON.stringify(query))
+        return fetch(`/services/${url}`, {
             method: 'POST',
             body: data
         })
             .then(res => res.json())
     }
+
+
 
     displayNSLogs(logs){
         let logEl = document.createElement('table')
@@ -94,13 +100,14 @@ export default class Nstool {
                             else  watchBtn.innerHTML = 'watch'
                             let saveLogValue = this.getRecordStringValue(logs, log.type)
                             let watch = ()=>{
-
                                 this.nslookup(this.lastSearch)
                                     .then(logs => {
                                         let newValue = this.getRecordStringValue(logs, log.type)
                                         if(newValue != saveLogValue) {
                                             saveLogValue = newValue
-                                            Notifier.prompt(`The DNS value ${log.type} for ${this.lastSearch} has been changed to ${newValue}!`)
+                                            let message = `The DNS value ${log.type} for ${this.lastSearch} has been changed to ${newValue}!`
+                                            Notifier.prompt(message)
+                                            if(this.mail.value) this.sendmail(this.mail.value, message)
                                         }
                                     })
                                 if(watchBtn.classList.contains('active')) setTimeout(()=>{watch()}, this.watchTimeout)
