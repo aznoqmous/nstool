@@ -1,15 +1,23 @@
 import Notifier from "./notifier";
 import Rigged from "rigged";
+import Cookies from "./cookies";
 
 export default class Nstool extends Rigged {
+
     constructor(container=null) {
         super({ container, template: `
         div .nstool
-            input #search [autofocus="true"] [placeholder="www.yoursite.com"]
+            div .search
+                input #searchInput [autofocus="true"] [placeholder="www.yoursite.com"]
+                div #suggests
             input #mail [type="mail"] [placeholder="mail"]
             div #dnsResults
             div #certResults
         ` })
+
+        this.history = Cookies.get('history')
+        if(this.history) this.history = JSON.parse(this.history)
+        else this.history = []
 
         this.watchTimeout = 5000
 
@@ -17,25 +25,62 @@ export default class Nstool extends Rigged {
     }
 
     bind(){
-        this.search.addEventListener('keyup', (e)=>{
+
+        this.searchInput.addEventListener('focusin', ()=>{
+            this.updateSuggests()
+            setTimeout(()=>{ this.suggests.classList.add('active')}, 100)
+        })
+
+        this.searchInput.addEventListener('focusout', ()=>{
+            setTimeout(()=>{ this.suggests.classList.remove('active')}, 100)
+        })
+
+        this.searchInput.addEventListener('keyup', (e)=>{
+
+            this.updateSuggests()
+
             if(e.key !== 'Enter') return;
 
-            this.search.value = this.search.value
+            this.searchInput.value = this.searchInput.value
                 .replace('https://', '')
                 .replace('http://', '')
 
-            this.nslookup(this.search.value)
-                .then(res => {
-                    this.dnsResults.innerHTML = ''
-                    this.dnsResults.appendChild(this.displayNSLogs(res))
-                })
-
-            this.certlookup(this.search.value)
-                .then(res => {
-                    this.certResults.innerHTML = ''
-                    this.certResults.appendChild(this.displayCert(res))
-                })
+            this.search(this.searchInput.value)
         })
+    }
+
+    updateSuggests(){
+        let historyMatches = this.matchHistory(this.searchInput.value)
+        this.suggests.innerHTML = ''
+
+        if(historyMatches.length){
+            historyMatches.map(domain => {
+                let newEl = document.createElement('span')
+                newEl.innerHTML = domain
+                this.suggests.appendChild(newEl)
+                newEl.addEventListener('click', ()=>{
+                    this.search(newEl.innerText)
+                })
+            })
+        }
+    }
+
+    search(value){
+        this.searchInput.value = value
+
+        this.addToHistory(value)
+
+        this.nslookup(value)
+            .then(res => {
+                this.dnsResults.innerHTML = ''
+                this.dnsResults.appendChild(this.displayNSLogs(res))
+            })
+
+        this.certlookup(value)
+            .then(res => {
+                this.certResults.innerHTML = ''
+                this.certResults.appendChild(this.displayCert(res))
+            })
     }
 
     nslookup(value){
@@ -97,15 +142,18 @@ export default class Nstool extends Rigged {
                         watchBtn.addEventListener('click', ()=>{
                             watchBtn.classList.toggle('active')
                             if(watchBtn.classList.contains('active'))  watchBtn.innerHTML = 'watching...'
-                            else  watchBtn.innerHTML = 'watch'
+                            else watchBtn.innerHTML = 'watch'
                             let saveLogValue = this.getRecordStringValue(logs, log.type)
+
+                            let domain = this.lastSearch
+
                             let watch = ()=>{
-                                this.nslookup(this.lastSearch)
+                                this.nslookup(domain)
                                     .then(logs => {
                                         let newValue = this.getRecordStringValue(logs, log.type)
                                         if(newValue != saveLogValue) {
                                             saveLogValue = newValue
-                                            let message = `The DNS value ${log.type} for ${this.lastSearch} has been changed to ${newValue}!`
+                                            let message = `The DNS value ${log.type} for ${domain} has been changed to ${newValue}!`
                                             Notifier.prompt(message)
                                             if(this.mail.value) this.sendmail(this.mail.value, message)
                                         }
@@ -153,5 +201,16 @@ export default class Nstool extends Rigged {
 
     getRecordStringValue(logs, type){
         this.filterLogs(logs, type).map(log => log.value).sort().join('')
+    }
+
+    addToHistory(domain){
+        if(!this.history.includes(domain)) this.history.push(domain)
+        document.cookie = `history=${JSON.stringify(this.history)}`
+    }
+
+    matchHistory(value){
+        return this.history.filter(domain => {
+            return domain.match(value)
+        }).sort()
     }
 }
