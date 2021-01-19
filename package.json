@@ -1,0 +1,23 @@
+{
+  "name": "nstool",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "rigged": "github:aznoqmous/rigged"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aznoqmous/nstool.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aznoqmous/nstool/issues"
+  },
+  "homepage": "https://github.com/aznoqmous/nstool#readme"
+}
