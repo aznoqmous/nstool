@@ -4,20 +4,24 @@ import Cookies from "./cookies";
 
 export default class Nstool extends Rigged {
 
-    constructor(container=null) {
-        super({ container, template: `
+    constructor() {
+        super({ template: `
         div .nstool
-            div .search
-                input #searchInput [autofocus="true"] [placeholder="www.yoursite.com"]
+            h1 (NSTOOL)
+            div .search.mb-2
+                input #searchInput .form-control [autofocus="true"] [placeholder="www.yoursite.com"]
                 div #suggests
-            input #mail [type="mail"] [placeholder="mail"]
+            input #mailInput .mb-2.form-control [type="mail"] [placeholder="mail"]
             div #dnsResults
             div #certResults
         ` })
 
+        document.body.appendChild(this.element)
+
         this.history = Cookies.get('history')
-        if(this.history) this.history = JSON.parse(this.history)
-        else this.history = []
+        if(!this.history) this.history = []
+
+        this.mailInput.value = Cookies.get('mail')
 
         this.watchTimeout = 5000
 
@@ -47,6 +51,10 @@ export default class Nstool extends Rigged {
 
             this.search(this.searchInput.value)
         })
+
+        this.mailInput.addEventListener('focusout', ()=>{
+            this.addMail(this.mailInput.value)
+        })
     }
 
     updateSuggests(){
@@ -68,10 +76,9 @@ export default class Nstool extends Rigged {
     search(value){
         this.searchInput.value = value
 
-        this.addToHistory(value)
-
         this.nslookup(value)
             .then(res => {
+                if(res) this.addToSuggests(value)
                 this.dnsResults.innerHTML = ''
                 this.dnsResults.appendChild(this.displayNSLogs(res))
             })
@@ -112,17 +119,25 @@ export default class Nstool extends Rigged {
 
 
     displayNSLogs(logs){
-        let logEl = document.createElement('table')
+        let rigged = (new Rigged({template: `
+            table .table.table-bordered
+                thead
+                    tr
+                tbody
+        `}))
+        let logEl = rigged.element
+
         let attributes = 'host,class,ttl,type,pri,value,watch'.split(',')
 
-        let line = document.createElement('tr')
+        let line = rigged.selectOne('thead > tr')
+
         attributes.map(attr => {
             let td = document.createElement('th')
             td.innerHTML = attr
             line.appendChild(td)
         })
-        logEl.appendChild(line)
 
+        let body = rigged.selectOne('tbody')
         logs
             .sort((a, b)=>{
                 return a.type > b.type ? 1 : -1
@@ -137,12 +152,14 @@ export default class Nstool extends Rigged {
 
                     // build watch btn
                     if(attr === 'watch') {
-                        let watchBtn = document.createElement('button')
-                        watchBtn.innerHTML = 'watch'
-                        watchBtn.addEventListener('click', ()=>{
-                            watchBtn.classList.toggle('active')
-                            if(watchBtn.classList.contains('active'))  watchBtn.innerHTML = 'watching...'
-                            else watchBtn.innerHTML = 'watch'
+                        let watchBtn = new Rigged({
+                            container: td,
+                            template: 'button .btn.btn-primary (watch)'
+                        })
+                        watchBtn.element.addEventListener('click', ()=>{
+                            watchBtn.element.classList.toggle('active')
+                            if(watchBtn.element.classList.contains('active'))  watchBtn.element.innerHTML = 'watching...'
+                            else watchBtn.element.innerHTML = 'watch'
                             let saveLogValue = this.getRecordStringValue(logs, log.type)
 
                             let domain = this.lastSearch
@@ -155,23 +172,29 @@ export default class Nstool extends Rigged {
                                             saveLogValue = newValue
                                             let message = `The DNS value ${log.type} for ${domain} has been changed to ${newValue}!`
                                             Notifier.prompt(message)
-                                            if(this.mail.value) this.sendmail(this.mail.value, message)
+                                            if(this.mailInput.value) this.sendmail(this.mailInput.value, message)
                                         }
                                     })
-                                if(watchBtn.classList.contains('active')) setTimeout(()=>{watch()}, this.watchTimeout)
+                                if(watchBtn.element.classList.contains('active')) setTimeout(()=>{watch()}, this.watchTimeout)
                             }
                             watch()
                         })
-                        td.appendChild(watchBtn)
                     }
                 })
-                logEl.appendChild(line)
+                body.appendChild(line)
             })
         return logEl
     }
 
     displayCert(cert){
-        let certEl = document.createElement('table')
+        let rigged = (new Rigged({template: `
+            table .table.table-bordered
+                thead
+                    tr
+                tbody
+        `}))
+        let certEl = rigged.element
+
         if(!cert) {
             certEl.innerHTML = 'No SSL'
             return certEl;
@@ -180,6 +203,7 @@ export default class Nstool extends Rigged {
         let attributes = 'from,to,verified,issuer,names'.split(',')
         let line = document.createElement('tr')
         let contentLine = document.createElement('tr')
+
         certEl.appendChild(line)
         certEl.appendChild(contentLine)
 
@@ -203,9 +227,13 @@ export default class Nstool extends Rigged {
         this.filterLogs(logs, type).map(log => log.value).sort().join('')
     }
 
-    addToHistory(domain){
+    addToSuggests(domain){
         if(!this.history.includes(domain)) this.history.push(domain)
-        document.cookie = `history=${JSON.stringify(this.history)}`
+        Cookies.set('history', this.history)
+    }
+
+    addMail(mail){
+        Cookies.set('mail', mail)
     }
 
     matchHistory(value){

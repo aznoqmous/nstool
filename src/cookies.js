@@ -17,7 +17,15 @@ export default class Cookies {
     }
 
     static get(key){
-        return Cookies.getAll()[key]
+        let value = Cookies.getAll()[key]
+        if(!value) return null
+        return JSON.parse(value)
+    }
+
+    static set(key, value, expires=864000000000000, path=null){
+        let cookie = `${key}=${JSON.stringify(value)};expires=${new Date(expires).toUTCString()}`
+        if(path) cookie += `;path=${path}`
+        document.cookie = cookie
     }
 
 }
