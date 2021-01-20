@@ -147,6 +147,7 @@ export default class Nstool extends Rigged {
                 line.setAttribute('data-type', log.type)
                 attributes.map(attr => {
                     let td = document.createElement('td')
+                    td.setAttribute('data-attr', attr)
                     td.innerHTML = log[attr] ? log[attr] : ''
                     line.appendChild(td)
 
@@ -166,13 +167,16 @@ export default class Nstool extends Rigged {
 
                             let watch = ()=>{
                                 this.nslookup(domain)
-                                    .then(logs => {
-                                        let newValue = this.getRecordStringValue(logs, log.type)
+                                    .then(watchLogs => {
+                                        let newValue = this.getRecordStringValue(watchLogs, log.type)
                                         if(newValue != saveLogValue) {
                                             saveLogValue = newValue
                                             let message = `The DNS value ${log.type} for ${domain} has been changed to ${newValue}!`
                                             Notifier.prompt(message)
+
                                             if(this.mailInput.value) this.sendmail(this.mailInput.value, message)
+                                            let value = line.querySelector('[data-attr="value"]')
+                                            value.innerHTML += `<br>${newValue} ${(new Date()).toLocaleTimeString()}`
                                         }
                                     })
                                 if(watchBtn.element.classList.contains('active')) setTimeout(()=>{watch()}, this.watchTimeout)
@@ -224,7 +228,8 @@ export default class Nstool extends Rigged {
     }
 
     getRecordStringValue(logs, type){
-        this.filterLogs(logs, type).map(log => log.value).sort().join('')
+        return this.filterLogs(logs, type)
+            .map(log => log.value).sort().join('')
     }
 
     addToSuggests(domain){
