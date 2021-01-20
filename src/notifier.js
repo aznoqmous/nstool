@@ -1,9 +1,11 @@
 export default class Notifier {
-    /**
-     * Display a notification
-     */
+
+    static requestPermission(){
+        return Notification.requestPermission()
+    }
+
     static prompt(message){
-        return Notification.requestPermission().then(()=>{
+        return Notifier.requestPermission().then(()=>{
             this.notify(message)
         })
     }

@@ -16,14 +16,23 @@ export default class Nstool extends Rigged {
             div #certResults
         ` })
 
-        document.body.appendChild(this.element)
-
+        /**
+         * Set up saved informations
+         */
         this.history = Cookies.get('history')
         if(!this.history) this.history = []
 
         this.mailInput.value = Cookies.get('mail')
 
+        /**
+         * Asks for notification permission
+         */
+        Notifier.requestPermission()
+
+
         this.watchTimeout = 5000
+
+        document.body.appendChild(this.element)
 
         this.bind()
     }

@@ -2,7 +2,10 @@
   box-sizing: border-box;
 }
 
-body {
+html {
+  font-size: 16px;
+}
+html body {
   padding-top: 1rem;
 }
 
@@ -41,4 +44,9 @@ body {
 .nstool #mailInput:not(:focus) {
   color: #666;
   border-color: rgba(0, 0, 0, 0);
+}
+@media (max-width: 769px) {
+  .nstool .table {
+    font-size: 0.8rem;
+  }
 }
