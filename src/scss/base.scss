@@ -1,4 +1,16 @@
-$color_grey: #666;
+$color_blue: #007bff;
+$color_indigo: #6610f2;
+$color_purple: #6f42c1;
+$color_pink: #e83e8c;
+$color_red: #dc3545;
+$color_orange: #fd7e14;
+$color_yellow: #ffc107;
+$color_green: #28a745;
+$color_teal: #20c997;
+$color_cyan: #17a2b8;
+$color_white: #fff;
+$color_gray: #6c757d;
+$color_gray_dark: #343a40;
 
 $box_shadow: 0 0 2px rgba(0,0,0,0.16);
 $border_radius: 2px;
@@ -40,8 +52,21 @@ html {
       padding: 0.5rem;
       display: flex;
       flex-direction: column;
-      > span {
-        cursor: pointer;
+      > div.suggest {
+        display: flex;
+        justify-content: space-between;
+        > span {
+          cursor: pointer;
+        }
+        > i.delete {
+          font-style: normal;
+          cursor: pointer;
+          &:before {
+          font-weight: bold;
+            color: $color_red;
+            content: "✕";
+          }
+        }
       }
       &.active:not(:empty) {
         opacity: 1;
@@ -53,7 +78,7 @@ html {
   #mailInput {
     cursor: pointer;
     &:not(:focus) {
-      color: $color_grey;
+      color: $color_gray;
       border-color: rgba(0, 0, 0, 0);
     }
   }

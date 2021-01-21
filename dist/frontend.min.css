@@ -1,3 +1,4 @@
+@charset "UTF-8";
 * {
   box-sizing: border-box;
 }
@@ -31,8 +32,21 @@ html body {
   display: flex;
   flex-direction: column;
 }
-.nstool .search #suggests > span {
+.nstool .search #suggests > div.suggest {
+  display: flex;
+  justify-content: space-between;
+}
+.nstool .search #suggests > div.suggest > span {
   cursor: pointer;
+}
+.nstool .search #suggests > div.suggest > i.delete {
+  font-style: normal;
+  cursor: pointer;
+}
+.nstool .search #suggests > div.suggest > i.delete:before {
+  font-weight: bold;
+  color: #dc3545;
+  content: "✕";
 }
 .nstool .search #suggests.active:not(:empty) {
   opacity: 1;
@@ -42,7 +56,7 @@ html body {
   cursor: pointer;
 }
 .nstool #mailInput:not(:focus) {
-  color: #666;
+  color: #6c757d;
   border-color: rgba(0, 0, 0, 0);
 }
 @media (max-width: 769px) {

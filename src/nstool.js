@@ -7,13 +7,13 @@ export default class Nstool extends Rigged {
     constructor() {
         super({ template: `
         div .nstool
-            h1 (NSTOOL)
+            h1 (nstool)
             div .search.mb-2
-                input #searchInput .form-control [autofocus="true"] [placeholder="www.yoursite.com"]
-                div #suggests
-            input #mailInput .mb-2.form-control [type="mail"] [placeholder="mail"]
-            div #dnsResults
-            div #certResults
+                input @searchInput #searchInput .form-control [autofocus="true"] [placeholder="www.yoursite.com"]
+                div @suggests #suggests
+            input @mailInput #mailInput .mb-2.form-control [type="mail"] [placeholder="mail"]
+            div @dnsResults #dnsResults
+            div @certResults #certResults
         ` })
 
         /**
@@ -57,6 +57,8 @@ export default class Nstool extends Rigged {
             this.searchInput.value = this.searchInput.value
                 .replace('https://', '')
                 .replace('http://', '')
+            let url = new URL(`http://${this.searchInput.value}`)
+            this.searchInput.value = url.hostname
 
             this.search(this.searchInput.value)
         })
@@ -72,11 +74,18 @@ export default class Nstool extends Rigged {
 
         if(historyMatches.length){
             historyMatches.map(domain => {
-                let newEl = document.createElement('span')
-                newEl.innerHTML = domain
-                this.suggests.appendChild(newEl)
-                newEl.addEventListener('click', ()=>{
-                    this.search(newEl.innerText)
+                let newEl = new Rigged({template: `
+                    div .suggest
+                        span @name (${domain}) 
+                        i @delete .delete
+                `})
+
+                this.suggests.appendChild(newEl.element)
+                newEl.name.addEventListener('click', ()=>{
+                    this.search(domain)
+                })
+                newEl.delete.addEventListener('click', ()=>{
+                    this.removeFromSuggests(domain)
                 })
             })
         }
@@ -124,8 +133,6 @@ export default class Nstool extends Rigged {
         })
             .then(res => res.json())
     }
-
-
 
     displayNSLogs(logs){
         let rigged = (new Rigged({template: `
@@ -242,7 +249,13 @@ export default class Nstool extends Rigged {
     }
 
     addToSuggests(domain){
+        if(!domain) return;
         if(!this.history.includes(domain)) this.history.push(domain)
+        Cookies.set('history', this.history)
+    }
+
+    removeFromSuggests(domain){
+        if(this.history.includes(domain)) this.history.splice(this.history.indexOf(domain), 1)
         Cookies.set('history', this.history)
     }
 
