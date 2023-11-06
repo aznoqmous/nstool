@@ -278,7 +278,7 @@ $whoisservers = array(
 
 function LookupDomain($domain){
 	global $whoisservers;
-    $domain = preg_replace("/[^a-z\.]/", "", $domain);
+    $domain = preg_replace("/[\"\' ]/", "", $domain);
 	$domain_parts = explode(".", $domain);
 	$tld = strtolower(array_pop($domain_parts));
 	$whoisserver = $whoisservers[$tld];
