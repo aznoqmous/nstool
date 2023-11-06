@@ -349,7 +349,8 @@ function QueryWhoisServer($whoisserver, $domain) {
 	fclose($fp);
 
 
-
+	$source_prefixes = ["domain_", "nserver_", "registrar_", "owner_", "tech_"];
+	$sourceIndex = 0;
     $res = [];
 	if((strpos(strtolower($out), "error") === FALSE) && (strpos(strtolower($out), "not allocated") === FALSE)) {
 		$rows = explode("\n", $out);
@@ -358,13 +359,11 @@ function QueryWhoisServer($whoisserver, $domain) {
 			if(($row != '') && ($row[0] != '#') && ($row[0] != '%')) {
 
                 $parts = explode(": ", $row);
-                $key = $parts[0];
+                $key = ( isset($source_prefixes[$sourceIndex]) ? $source_prefixes[$sourceIndex] : "" ) . $parts[0];
                 $value = trim($parts[1]);
-                $res[] = [
-                    "key" => $key,
-                    "value" => $value
-                ];
-                if($key == "source") $res[] = ['key' => "----------------", 'value' => "----------------"];
+				if(isset($res[$key])) $res[$key] .= ", " . $value;
+                else $res[$key] = $value;
+                if($parts[0] == "source") $sourceIndex++;
             }
 		}
 	}

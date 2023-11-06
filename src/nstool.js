@@ -267,12 +267,12 @@ export default class Nstool extends Rigged {
             whoisEl.innerHTML = "No Who is"
         }
 
-        whois.map(row => {
+        Object.keys(whois).map(key => {
             const line = document.createElement('tr')
             let th = document.createElement('th')
             let td = document.createElement('td')
-            th.innerHTML = row.key
-            td.innerHTML = row.value
+            th.innerHTML = key
+            td.innerHTML = whois[key]
             line.appendChild(th)
             line.appendChild(td)
             rigged.tbody.appendChild(line)
