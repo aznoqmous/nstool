@@ -1,5 +1,4 @@
 <?php
-require "../vendor/autoload.php";
 
 /*************************************************************************
 php easy :: whois lookup script
