@@ -12,8 +12,12 @@ export default class Nstool extends Rigged {
                 input @searchInput #searchInput .form-control [autofocus="true"] [placeholder="www.yoursite.com"]
                 div @suggests #suggests
             input @mailInput #mailInput .mb-2.form-control [type="mail"] [placeholder="mail"]
+            h2 (DNS)
             div @dnsResults #dnsResults
+            h2 (Certificate)
             div @certResults #certResults
+            h2 (Whois)
+            div @whoisResults #whoisResults
         ` })
 
         /**
@@ -106,6 +110,12 @@ export default class Nstool extends Rigged {
                 this.certResults.innerHTML = ''
                 this.certResults.appendChild(this.displayCert(res))
             })
+            
+        this.whoisLookup(value)
+            .then(res => {
+                this.whoisResults.innerHTML = ''
+                this.whoisResults.appendChild(this.displayWhois(res))
+            })
     }
 
     nslookup(value){
@@ -116,6 +126,11 @@ export default class Nstool extends Rigged {
     certlookup(value){
         this.lastSearch = value
         return this.post('cert.php', value)
+    }
+
+    whoisLookup(value){
+        this.lastSearch = value
+        return this.post('whois.php', value)
     }
 
     sendmail(destination, content){
@@ -237,6 +252,34 @@ export default class Nstool extends Rigged {
         })
 
         return certEl
+    }
+
+    displayWhois(whois){
+        let rigged = (new Rigged({template: `
+            table .table.table-bordered
+                thead
+                    tr
+                tbody @tbody
+        `}))
+        let whoisEl = rigged.element
+
+        if(!whois){
+            whoisEl.innerHTML = "No Who is"
+        }
+
+        whois.map(row => {
+            const line = document.createElement('tr')
+            let th = document.createElement('th')
+            let td = document.createElement('td')
+            th.innerHTML = row.key
+            td.innerHTML = row.value
+            line.appendChild(th)
+            line.appendChild(td)
+            rigged.tbody.appendChild(line)
+
+        })
+
+        return whoisEl
     }
 
     filterLogs(logs, type){

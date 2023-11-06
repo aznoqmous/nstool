@@ -89,4 +89,10 @@ html {
     }
   }
 
+  #whoisResults {
+    .table td, .table th {
+      font-size: 12px;
+      padding: 0.25rem;
+    }
+  }
 }
